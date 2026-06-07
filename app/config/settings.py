@@ -1,11 +1,12 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Tuple
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class settings(BaseSettings):
   model_config = SettingsConfigDict(
-    env_file=".env",
+    env_file=str(Path(__file__).resolve().parent.parent.parent/".env"),
     env_file_encoding="utf-8",
     extra="ignore"
   )
@@ -34,6 +35,8 @@ class settings(BaseSettings):
   CHUNK_OVERLAP : int = 50
   SEPARATORS : list[str] = ["\n\n", "\n", "\t", " ",".",",","!","?",";","。","，"]
 
+# vector返回相似度几个
+  VECTOR_MAX_NUM : int = 3
 
 """
   @lru_cache
