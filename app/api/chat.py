@@ -10,6 +10,6 @@ router = APIRouter()
 @router.post("/stream")
 async def stream_chat(request : ChatRequest) ->  StreamingResponse:
     return StreamingResponse(
-        stream_chat_service(request.message),
+        stream_chat_service(request.question),
         media_type="text/event-stream"
     )
