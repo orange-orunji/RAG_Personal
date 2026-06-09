@@ -3,7 +3,7 @@ import os.path
 
 from langchain_core.chat_history import BaseChatMessageHistory
 
-from app.config.settings import CHAT_HISTORY_STORAGY_PATH
+from app.config import settings
 from langchain_core.messages import BaseMessage,message_to_dict,messages_from_dict
 
 
@@ -45,6 +45,6 @@ class FileChatHistory(BaseChatMessageHistory):
     def clear(self):
         with open(self.file_path,"w",encoding="utf-8"):
             pass
-
+s = settings.get_settings()
 def get_file_chat_history(session_id):
-    return FileChatHistory(session_id,CHAT_HISTORY_STORAGY_PATH)
+    return FileChatHistory(session_id,s.CHAT_HISTORY_STORAGY_PATH)

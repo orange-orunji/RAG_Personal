@@ -1,8 +1,9 @@
+from operator import itemgetter
 
 from langchain_community.embeddings import DashScopeEmbeddings
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnablePassthrough, RunnableWithMessageHistory, RunnableLambda, RunnableParallel
 from langchain_openai import ChatOpenAI
 
 from app.config.settings import get_settings
@@ -10,6 +11,7 @@ from collections.abc import AsyncIterator
 from openai import AsyncOpenAI,APIError
 
 from app.services.KnowledgeBase_md5_service import KnowledgeBaseService
+from app.services.history_service import get_file_chat_history
 
 
 # 获取模型API相关的信息
@@ -61,21 +63,34 @@ def get_rag_chain():
                 ("system","以提供的已知参考资料为主,"
                  "简洁和专业的回答用户问题，参考资料:{content}"),
                 ("system","并且更根据历史信息来回答"),
-                # MessagesPlaceholder("history"),
+                MessagesPlaceholder("history"),
                 ("human","问题:{input}")
             ]
         )
 
 
 
+    # 获取基础链对象
     chain = (
-        {
-            "input": RunnablePassthrough(),
-            "content": retriever | __format_content
-        } | prompt | llm | StrOutputParser()
+        RunnableParallel(
+            {"input": RunnablePassthrough(),
+             "content": itemgetter("input") | retriever | RunnableLambda(__format_content),
+             "history": itemgetter("history")}
+        ) | prompt | llm | StrOutputParser()
+    )
+    # 获取增强链对象
+    increase_chain = RunnableWithMessageHistory(
+        chain,
+        get_file_chat_history,
+        input_messages_key="input",
+        history_messages_key="history"
     )
 
-    return chain
+    return increase_chain
+
+def temp(dicts):
+    return {"input":dicts["input"]["input"],"content":dicts["content"],"history":dicts["input"]["history"]}
+
 
 def __format_content(documents):
     if not documents:
@@ -87,7 +102,13 @@ def __format_content(documents):
         return document_str
 
 if __name__ == '__main__':
+    configration = {
+        "configurable": {
+            "session_id": "user_0001"
+        }
+    }
     chain = get_rag_chain()
-    stream = chain.stream("什么是高考")
+    stream = chain.stream({"input":"我地理考了几分"}, config=configration)
     for chunk in stream:
-        print(chunk)
+        print(chunk,end="",flush=True)
+    # print(chain.invoke({"input": "什么是高考"}, config=configration))
