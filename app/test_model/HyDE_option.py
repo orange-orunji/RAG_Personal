@@ -4,10 +4,10 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
 from app.config.settings import get_settings
-from app.services.vector_store import vector_store_service
+from app.services.vector_store import VectorStoreService
 
 s = get_settings()
-_vs = vector_store_service(embedding_model=None)
+_vs = VectorStoreService(embedding_model=None)
 
 llm = ChatOpenAI(
     model=s.SILICON_MODEL,
@@ -16,9 +16,9 @@ llm = ChatOpenAI(
     callbacks=[]
 )
 
-def generate_hypothetical(question : str) -> str | list[str | Any]:
+def generate_hypothetical(question : str) -> str:
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "你是一个文档写作助手。请根据用户的问题，写一段可能出现在相关文档中的答案"),
+        ("system", "你是一个文档写作助手。请根据用户的问题，写一段可能出现在相关文档中的答案/假想文本"),
         ("human", "{question}")
     ])
     messages = prompt.format_messages(question=question)

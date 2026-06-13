@@ -1,16 +1,15 @@
 from operator import itemgetter
 
-from app.test_model.HyDE_option import hyde_retrieve
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables import RunnablePassthrough, RunnableWithMessageHistory, RunnableLambda, RunnableParallel
+from langchain_core.runnables import RunnableWithMessageHistory, RunnableLambda, RunnableParallel
 from langchain_openai import ChatOpenAI
 
 from app.config.settings import get_settings
-from collections.abc import AsyncIterator
 from openai import AsyncOpenAI,APIError
 
-from app.services.KnowledgeBase_md5_service import KnowledgeBaseService
+from collections.abc import AsyncIterator
+from app.test_model.HyDE_option import hyde_retrieve
 from app.services.history_service import get_file_chat_history
 
 
@@ -47,20 +46,17 @@ async def stream_llm(messages: list[dict[str, str]]) -> AsyncIterator[str]:
 
 def get_rag_chain():
     s = get_settings()
-
-    retriever = RunnableLambda(lambda p : hyde_retrieve(p))
-
     llm = ChatOpenAI(
         model=s.SILICON_MODEL,
-        api_key=s.SILICON_API_KEY,
         base_url=s.SILICON_BASE_URL,
         streaming=True,
         callbacks=[]
     )
+    retrieve = RunnableLambda(lambda q  : hyde_retrieve(question=q))
 
     prompt = ChatPromptTemplate.from_messages(
             messages=[
-                ("system","以提供的已知参考资料为主,"
+                ("system", "以提供的已知参考资料为主,"
                  "简洁和专业的回答用户问题，参考资料:{content}"),
                 ("system","并且更根据历史信息来回答"),
                 MessagesPlaceholder("history"),
@@ -74,9 +70,9 @@ def get_rag_chain():
     chain = (
         RunnableParallel(
             {"input": itemgetter("input"),
-             "content": itemgetter("input") | retriever | RunnableLambda(__format_content),
+             "content": itemgetter("input") | retrieve | RunnableLambda(__format_content),
              "history": itemgetter("history")}
-        ) | prompt | llm | StrOutputParser()
+        )  | prompt | llm | StrOutputParser()
     )
     # 获取增强链对象
     increase_chain = RunnableWithMessageHistory(
@@ -105,7 +101,7 @@ if __name__ == '__main__':
         }
     }
     chain = get_rag_chain()
-    stream = chain.stream({"input":"java和香蕉有什么关系"}, config=configration)
+    stream = chain.stream({"input":"python和蟒蛇有什么关系,有输入假想文本吗"}, config=configration)
     for chunk in stream:
         print(chunk,end="",flush=True)
     # print(chain.invoke({"input": "什么是高考"}, config=configration))
