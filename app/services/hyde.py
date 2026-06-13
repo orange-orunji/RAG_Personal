@@ -25,8 +25,8 @@ def generate_hypothetical(question : str) -> str:
     content = llm.invoke(messages)
     return content.content
 
-def hyde_retrieve(question : str):
-    return _vs.get_vector(query=generate_hypothetical(question), k=3)
+def hyde_retrieve(question : str,k : int = 3):
+    return _vs.get_vector(query=generate_hypothetical(question),k=k)
 
 if __name__ == "__main__":
     q = "java相关资料？"

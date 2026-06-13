@@ -9,7 +9,7 @@ from app.config.settings import get_settings
 from openai import AsyncOpenAI,APIError
 
 from collections.abc import AsyncIterator
-from app.test_model.HyDE_option import hyde_retrieve
+from app.services.hyde import hyde_retrieve
 from app.services.history_service import get_file_chat_history
 
 
@@ -20,10 +20,10 @@ def _client() -> AsyncOpenAI:
     api_key= c.SILICON_API_KEY,
     base_url= c.SILICON_BASE_URL
   )
-
-
-def build_content(message: str) -> list[dict[str, str]]:
-    return [{"role": "user", "content": message}]
+#
+# 文本生成器
+# def build_content(message: str) -> list[dict[str, str]]:
+#     return [{"role": "user", "content": message}]
 
 
 async def stream_llm(messages: list[dict[str, str]]) -> AsyncIterator[str]:
@@ -48,11 +48,12 @@ def get_rag_chain():
     s = get_settings()
     llm = ChatOpenAI(
         model=s.SILICON_MODEL,
+        api_key=s.SILICON_API_KEY,
         base_url=s.SILICON_BASE_URL,
         streaming=True,
         callbacks=[]
     )
-    retrieve = RunnableLambda(lambda q  : hyde_retrieve(question=q))
+    retrieve = RunnableLambda(lambda q  : hyde_retrieve(question=q,k=25))
 
     prompt = ChatPromptTemplate.from_messages(
             messages=[
@@ -101,7 +102,7 @@ if __name__ == '__main__':
         }
     }
     chain = get_rag_chain()
-    stream = chain.stream({"input":"python和蟒蛇有什么关系,有输入假想文本吗"}, config=configration)
+    stream = chain.stream({"input":"python和蟒蛇有什么关系"}, config=configration)
     for chunk in stream:
         print(chunk,end="",flush=True)
     # print(chain.invoke({"input": "什么是高考"}, config=configration))
