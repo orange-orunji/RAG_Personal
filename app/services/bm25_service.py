@@ -21,6 +21,12 @@ class BM25Service:
         self.bm25 = BM25Okapi(self.tokenizes_content)
 
     def search(self,query : str,top_k:int=10):
+        """
+
+        :param query: 询问的问题
+        :param top_k: 返回的最高相似度个数
+        :return: 最高相似度得分的列表
+        """
         if not self.bm25:
             return []
         # 获取当前问题的切片

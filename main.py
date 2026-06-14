@@ -20,8 +20,10 @@ app.add_middleware(
 app.include_router(chat_router,prefix="/api/chat",tags=["对话接口"])
 app.include_router(document_router,prefix="/api/document",tags=["上传文件接口"])
 
+"""在启动时对bm25(混合向量检索模型)进行文档初始化"""
 @app.on_event("startup")
 async def build_bm25_index():
+    # 获取当前chroma中的所有文件，try和except中的方法执行逻辑一致
     try:
         all_docs = VectorStoreService().get_all_documents()
     except AttributeError:
