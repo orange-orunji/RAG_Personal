@@ -26,16 +26,16 @@ def generate_hypothetical(question : str) -> str:
     content = llm.invoke(messages)
     return content.content
 # 原版hyde检索
-# def hyde_retrieve(question : str,k : int = 3):
-#     return _vs.get_vector(query=generate_hypothetical(question),k=k)
+def hyde_retrieve(question : str,k : int = 3):
+    return _vs.get_vector(query=generate_hypothetical(question),k=k)
 
 # rerank后hyde检索
-def hyde_retrieve(question : str,k : int = 3):
+def hyde_plus_rerank_retrieve(question : str, k : int = 3):
     vector = _vs.get_vector(query=generate_hypothetical(question), k=k)
     return rerank(query=generate_hypothetical(question),docs=vector,top_k=k)
 if __name__ == "__main__":
     q = "java相关资料？"
-    docs = hyde_retrieve(q)
+    docs = hyde_plus_rerank_retrieve(q)
     print("检索到的文档片段：")
     for doc in docs:
         print(doc.page_content[:200])
