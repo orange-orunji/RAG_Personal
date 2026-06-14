@@ -2,7 +2,6 @@ import os
 
 from langchain_community.embeddings import DashScopeEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 
 from app.config.settings import get_settings
@@ -33,6 +32,20 @@ class VectorStoreService:
 
     def get_vector(self, query: str, k: int = 3):
         return self.chroma.similarity_search(query, k=k)
+
+    def get_all_documents(self) -> list:
+        """
+        获取chroma中全部数据
+        :return:
+        """
+        data = self.chroma.get()
+
+        from langchain_core.documents import Document
+        return [
+            Document(page_content=text, metadata=meta)
+            for text,meta in zip(data['documents'],data['metadatas'])
+        ]
+
 #     创建唯一实体，防止重复创建
 vector_store_service = VectorStoreService()
 
