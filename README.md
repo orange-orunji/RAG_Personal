@@ -34,7 +34,7 @@
 ## 📂 项目结构
 ```text
   RAG_Personal
-     ├── app/
+     └── app/
           ├── api/ # FastAPI 接口层
           │ ├── auth.py # 注册/登录
           │ ├── chat.py # 对话流式、历史、会话管理
@@ -71,8 +71,8 @@ uvicorn main:app --reload  #运行后端
 
 streamlit run ui.py    #运行前端界面后，进入http://localhost:8501
 
-##😳 后期完善方向
-###1.redis缓存
-###2.docker部署
-###3.历史文件索引和删除操作
+## 😳 后期完善方向
+### 1.redis缓存
+### 2.docker部署
+### 3.历史文件索引和删除操作
 
