@@ -120,15 +120,15 @@ print(result["source_documents"])  # 引用来源
 
 ---
 
-## 🚀 立即行动的三件事
-
-1. **建好项目骨架**：
-   ```bash
-   mkdir enterprise-qa && cd enterprise-qa
-   python -m venv venv
-   source venv/bin/activate  # Windows: venv\Scripts\activate
-   # 安装依赖
-   pip install fastapi uvicorn langchain langchain-openai chromadb python-dotenv pypdf
-   ```
-2. **准备测试文档**：把你手边的一个 PDF 或公司制度文件放到 `docs/` 下。
-3. **写好第一个 `/upload` 接口**，用 LangChain 加载文档内容并返回长度，确认解析成功。
+登录流程
+用户打开 Streamlit 页面
+    │
+    └→ 侧边栏显示登录/注册表单
+         │
+         ├→ 注册：填用户名+密码 → 后端 /register → 数据库新增一行 → 提示注册成功
+         │
+         └→ 登录：填用户名+密码 → 后端 /login → 验证密码 → 返回 JWT Token
+                  │
+                  └→ 前端保存 token → 后续所有请求都带上 token
+                       │
+                       └→ 后端受保护的接口（如上传、聊天）先解析 token，确认用户身份
