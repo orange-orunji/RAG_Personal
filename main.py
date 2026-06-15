@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.services import vector_store
 from app.services.vector_store import VectorStoreService
 from app.services.bm25_service import BM25Service
-from app.database import engine,Base
+from app.utils.SQL_database import engine,Base
 app = FastAPI(title="RAG Personal API")
 # 添加拦截器
 app.add_middleware(

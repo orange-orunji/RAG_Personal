@@ -41,9 +41,12 @@ class settings(BaseSettings):
     CHAT_HISTORY_STORAGY_PATH: str = str(BASE_DIR / "app/data/chat_history")
 
     # redis 配置
-    REDIS_HOST = "localhost"
-    REDIS_POST = 6379
-    REDIS_DB = 1
+    REDIS_HOST : str = "localhost"
+    REDIS_PORT : int = 6379
+    REDIS_DB : int = 1
+    # redis 相关关键字
+    REDIS_USER_PREFIX : str = "qa"
+    REDIS_EXPIRE : int = 600
 
 @lru_cache
 def get_settings() -> settings:
