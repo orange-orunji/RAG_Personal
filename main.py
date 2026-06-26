@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from app.api.chat import router as chat_router
 from app.api.document import router as document_router
 from app.api.auth import router as auth_router
@@ -7,9 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.services import vector_store
 from app.services.vector_store import VectorStoreService
 from app.services.bm25_service import BM25Service
-from app.utils.SQL_database import engine,Base
+from app.utils.SQL_database import engine, Base
+
 app = FastAPI(title="RAG Personal API")
-# 添加拦截器
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,22 +20,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 注册路由(将聊天接口加到主路由上)
-app.include_router(chat_router,prefix="/api/chat",tags=["对话接口"])
-app.include_router(document_router,prefix="/api/document",tags=["上传文件接口"])
-app.include_router(auth_router,prefix="/api/auth",tags=["用户登录注册相关接口"])
+app.include_router(chat_router, prefix="/api/chat", tags=["对话接口"])
+app.include_router(document_router, prefix="/api/document", tags=["上传文件接口"])
+app.include_router(auth_router, prefix="/api/auth", tags=["用户登录注册相关接口"])
 
-"""在启动时对bm25(混合向量检索模型)进行文档初始化"""
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"code": 500, "message": f"服务器内部错误: {str(exc)}", "data": None}
+    )
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "service": "RAG Personal API"}
+
+
 @app.on_event("startup")
 async def build_bm25_index():
-    # 获取当前chroma中的所有文件，try和except中的方法执行逻辑一致
     try:
         all_docs = VectorStoreService().get_all_documents()
     except AttributeError:
-        # 手动获取chroma中的文件,执行逻辑和类本身的构建相同
-        all_docs = vector_store.chroma.get()  # 返回字典，包含 'documents' 和 'metadatas'
-        # 需要转换成 Document 列表
         from langchain_core.documents import Document
+        all_docs = vector_store.chroma.get()
         all_docs = [
             Document(page_content=text, metadata=meta)
             for text, meta in zip(all_docs['documents'], all_docs['metadatas'])
@@ -41,10 +52,11 @@ async def build_bm25_index():
     BM25Service().build_index(all_docs)
     print(f"BM25 索引构建完成，文档数：{len(all_docs)}")
 
-"""启动时自动创建所有继承了...的表"""
+
 @app.on_event("startup")
 async def build_table_if_absent():
     Base.metadata.create_all(bind=engine)
+
 
 if __name__ == '__main__':
     import uvicorn

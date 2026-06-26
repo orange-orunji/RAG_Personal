@@ -1,10 +1,9 @@
-from fastapi import Depends, HTTPException,status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 from passlib.context import CryptContext
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 
-from streamlit import status
 
 SECRET_ID = "my_secret_key_for_demo" # 加密前缀
 ALGORITHM = "HS256" # 加密方式

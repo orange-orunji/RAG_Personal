@@ -25,17 +25,16 @@ def _sse_escape(text: str) -> str:
 @router.post("/stream")
 async def stream_chat(request: ChatRequest, current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"]
-    # 用md5缩短键处理问题，避免特色字符\n,?,-之类的
     question_hash = hashlib.md5(request.question.encode()).hexdigest()
     user_key = f"{s.REDIS_USER_PREFIX}:{user_id}:{question_hash}"
-    # redis中查询该用的缓存是否存在
-    redis_chat_history = redis.get(user_key)
-    # 缓存命中则进行流
-    if redis_chat_history:
-        async def cache_stream():
-            yield f"data: {_sse_escape(redis_chat_history)}\n\n"
-            yield "data: [DONE]\n\n"
-        return StreamingResponse(cache_stream(),200,media_type="text/event-stream")
+
+    if redis:
+        redis_chat_history = redis.get(user_key)
+        if redis_chat_history:
+            async def cache_stream():
+                yield f"data: {_sse_escape(redis_chat_history)}\n\n"
+                yield "data: [DONE]\n\n"
+            return StreamingResponse(cache_stream(), 200, media_type="text/event-stream")
 
     async def event_stream():
         all_request = ""
@@ -48,13 +47,12 @@ async def stream_chat(request: ChatRequest, current_user: dict = Depends(get_cur
                 all_request += chunk
                 yield f"data: {_sse_escape(chunk)}\n\n"
         except Exception as e:
-            # 发送错误消息给前端，避免连接突然中断
             yield f"data: 【系统错误】{_sse_escape(str(e))}\n\n"
         finally:
-            if all_request:
-                redis.setex(name=user_key,value=all_request,time=s.REDIS_EXPIRE)
+            if all_request and redis:
+                redis.setex(name=user_key, value=all_request, time=s.REDIS_EXPIRE)
             yield "data: [DONE]\n\n"
-    return StreamingResponse(event_stream(),media_type="text/event-stream")
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 @router.get("/history/{session_id}")
 async def get_history(session_id: str, current_user: dict = Depends(get_current_user)):

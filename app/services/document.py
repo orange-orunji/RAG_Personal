@@ -3,12 +3,10 @@ from app.services.vector_store import vector_store_service
 
 from io import BytesIO
 from pathlib import Path
-from fastapi import Depends
 
 from app.config.settings import get_settings
 from app.schemas.response import UnifiedResponse
 from app.services.KnowledgeBase_md5_service import KnowledgeBaseService
-from app.utils.auth import get_current_user
 
 
 async def _extract_text(content: bytes, suffix: str) -> str:
@@ -40,7 +38,7 @@ async def _extract_text(content: bytes, suffix: str) -> str:
     raise ValueError(f"不支持的文件格式: {suffix}")
 
 
-async def upload_documents(content: bytes, filename: str | None,current_user: dict = Depends(get_current_user)) -> UnifiedResponse:
+async def upload_documents(content: bytes, filename: str | None, current_user: dict) -> UnifiedResponse:
     user_id = current_user["user_id"]
     """上传文件处理：校验 -> 解析 -> 向量化存储"""
     if not filename:
