@@ -106,7 +106,7 @@ if __name__ == '__main__':
             "session_id": "user_0001"
         }
     }
-    chain = get_rag_chain()
+    chain = get_rag_chain("user_0001")
     stream = chain.stream({"input":"python和蟒蛇有什么关系"}, config=configration)
     for chunk in stream:
         print(chunk,end="",flush=True)
