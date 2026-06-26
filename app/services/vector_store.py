@@ -1,7 +1,7 @@
 import os
 
 from langchain_community.embeddings import DashScopeEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_openai import ChatOpenAI
 
 from app.config.settings import get_settings

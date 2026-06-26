@@ -16,6 +16,8 @@ class FileChatHistory(BaseChatMessageHistory):
         self.user_id = user_id
         os.makedirs(storage_path, exist_ok=True)
         self.user_dir = os.path.join(storage_path,user_id)
+        if os.path.isfile(self.user_dir):
+            os.remove(self.user_dir)
         os.makedirs(self.user_dir, exist_ok=True)
         # 文件名为 {session_id}.json
         self.file_path = os.path.join(self.user_dir, f"{session_id}.json")
